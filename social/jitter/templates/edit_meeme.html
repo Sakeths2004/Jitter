@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{%load static%}
+{% block content %}
+<div class="container text-center">
+    <div class="row">
+        <div class="col-8">
+            <div class="alert alert-dark" role="alert">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-1">
+                            {%if meeme.user.profile.profile_image%}
+                            <img src="{{ meeme.user.profile.profile_image.url}}" width=50 height=50 class="rounded-circle"
+                                alt="{{profile.user.username}}">
+                            {%else%}
+                            <img src="{%static 'images/p.jpg'%}" width=50 height=50 class="rounded-circle"
+                                alt="{{profile.user.username}}">
+                            {%endif%}
+                        </div>
+                        <div class="col-11">
+                            {{meeme.body}} <br>
+                            <small class="text-muted">
+                                {{meeme.created_at}} By
+                                @{{ meeme.user.username}}
+                                 {{meeme.number_of_likes}} 
+                                {%if user in meeme.likes.all %}
+                                <a href="{% url 'meeme_like' %}"><i class="fa-solid fa-heart" style="color: red;"></i></a>
+                                {%else%}
+                                <a href="{% url 'meeme_like'  %}"><i class="fa fa-heart-o" style="color: red;"></i></a>
+                                {%endif%}
+                            </small>
+                        </div>
+                        <br><br>
+                    </div>
+                </div>
+            </div>
+       <br><br>
+            {% if form%}
+            <form method=POST>
+                {% csrf_token %}
+                {{ form.as_p}} &nbsp;
+                <button type="submit" class="btn btn-secondary">Edit Meeme!</button>
+            </form>{%endif%}
+        </div>
+        <script>
+            $(document).ready(function () {
+              $(".like-btn").click(function (event) {
+                event.preventDefault();
+                var meemeId = $(this).data('meeme-id');
+                var likeCount = $(this).closest(".alert").find("#like-count");
+                var likeIcon = $(this).find("i");
+                
+                $.ajax({
+                  type: "POST",
+                  url: "/meeme/like/",
+                  data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    meemeId: meemeId
+                  },
+                  success: function (data) {
+                    if (data.is_liked) {
+                      likeIcon.removeClass("fa-heart-o").addClass("fa-solid fa-heart");
+                      likeCount.text(data.like_count);
+                      // messageContainer.text("Liked!").removeClass("error").addClass("success");
+                    } else {
+                      likeIcon.removeClass("fa-solid fa-heart").addClass("fa-heart-o");
+                      likeCount.text(data.like_count);
+                    }
+                  },
+                  error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                  }
+                });
+              });
+            });
+          </script>
+          
+        {% endblock %}

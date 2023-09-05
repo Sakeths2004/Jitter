@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container text-center">
+    <div class="row">
+        <div class="col-8">
+            <div class="alert alert-dark" role="alert">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-1">
+                            {% if meeme.user.profile.profile_image %}
+                            <img src="{{ meeme.user.profile.profile_image.url }}" width=50 height=50 class="rounded-circle"
+                                alt="{{ profile.user.username }}">
+                            {% else %}
+                            <img src="{% static 'images/p.jpg' %}" width=50 height=50 class="rounded-circle"
+                                alt="{{ profile.user.username }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-11">
+                            {{ meeme.body }} <br>
+                            <small class="text-muted">
+                                {{ meeme.created_at }} By
+                                @{{ meeme.user.username }}
+                                <span id="like-count">{{ meeme.number_of_likes }}</span>
+                                
+                                <a href="#" class="like-btn" data-meeme-id="{{ meeme.id }}">
+                                  {% if user in meeme.likes.all %}
+                                    <i class="fa-solid fa-heart" style="color: red;"></i>
+                                  {% else %}
+                                    <i class="fa fa-heart-o" style="color: red;"></i>
+                                  {% endif %}
+                                </a>
+                                  <span id="message-container"></span>
+                            </small>
+                        </div>
+                        <br><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if form %}
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-secondary">Post Meeme!</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $(".like-btn").click(function (event) {
+      event.preventDefault();
+      var meemeId = $(this).data('meeme-id');
+      var likeCount = $(this).closest(".alert").find("#like-count");
+      var likeIcon = $(this).find("i");
+      
+      $.ajax({
+        type: "POST",
+        url: "/meeme/like/",
+        data: {
+          csrfmiddlewaretoken: "{{ csrf_token }}",
+          meemeId: meemeId
+        },
+        success: function (data) {
+          if (data.is_liked) {
+            likeIcon.removeClass("fa-heart-o").addClass("fa-solid fa-heart");
+            likeCount.text(data.like_count);
+            // messageContainer.text("Liked!").removeClass("error").addClass("success");
+          } else {
+            likeIcon.removeClass("fa-solid fa-heart").addClass("fa-heart-o");
+            likeCount.text(data.like_count);
+          }
+        },
+        error: function (xhr, textStatus, errorThrown) {
+          console.error('Error:', errorThrown);
+        }
+      });
+    });
+  });
+</script>
+
+{% endblock %}
